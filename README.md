@@ -1,55 +1,99 @@
-# ⚽ PitchPerfect
-# FIFA Player Data Visualization Dashboard
+# ⚽ PitchPerfect – FIFA Player Data Dashboard
 
-An interactive **Streamlit dashboard** for exploring and visualizing FIFA player data using **Pandas**, **NumPy**, **Matplotlib**, and **Seaborn**.
+An interactive **FIFA player analytics dashboard** built with Streamlit, featuring data visualization, filtering, and machine learning-based player rating prediction.
 
-Working Demo : https://youtu.be/UbWuZ44PhEo
+---
 
 ## 🚀 Features
-- Interactive filters for **Nationality** and **Club**
-- Automatic data cleaning and unit conversion
-  - Height (feet → cm)
-  - Weight (lbs → kg)
-  - Wage & Value (€K / €M → numeric)
-- Dynamic data table preview
-- Multiple insightful visualizations
 
-## 📊 Visualizations Included
-- Top 5 nationalities (pie chart)
-- Age distribution (histogram)
-- Preferred foot distribution
-- Top clubs by average overall rating
-- Overall vs Potential scatter plot
-- Most common playing positions
-- Wage vs Overall rating
-- Height vs Weight relationship
-- Attribute correlation heatmap
+* 📊 Interactive data filtering (Nationality & Club)
+* 📈 Visual analytics:
+  * Top nationalities
+  * Age distribution
+  * Preferred foot breakdown
+* 🤖 Machine learning models:
+  * Random Forest Regressor
+  * XGBoost Regressor
+* 📐 Feature importance visualization
+* 🎯 Player rating prediction tool
+* ⚡ Fast and responsive Streamlit UI
 
-## 🛠️ Tech Stack
-- Python
-- Pandas
-- NumPy
-- Streamlit
-- Matplotlib
-- Seaborn
+---
 
-## ▶️ How to Run
-1. Clone the repository:
-```bash
+## 🧠 Machine Learning Models
+### 🌲 Random Forest
+* Ensemble-based model
+* Handles non-linearity well
+* Provides feature importance
+### ⚡ XGBoost
+* Gradient boosting model
+* High performance and accuracy
+* Efficient with structured data
+
+---
+
+## ⚙️ Installation
+
+```bash id="fifa13"
 git clone https://github.com/abdullahwaseem404/PitchPerfect.git
-````
-2. Install dependencies:
-```bash
 pip install -r requirements.txt
 ```
-3. Run the app:
-```bash
+
+---
+
+## ▶️ Usage
+
+Run the Streamlit app:
+
+```bash id="fifa15"
 streamlit run app.py
 ```
 
-## 💡 Use Cases
+---
 
-* Sports data analysis
-* Exploratory data analysis (EDA)
-* Interactive dashboards with Streamlit
-* Learning data visualization best practices
+## 🎛️ Dashboard Controls
+
+* **Nationality Filter** → Filter players by country
+* **Club Filter** → Filter players by club
+* Dynamic charts update in real-time
+
+---
+
+## 📊 Visualizations
+
+* 🌍 Top 5 Nationalities (Pie Chart)
+* 🎂 Age Distribution (Histogram)
+* 🦶 Preferred Foot Distribution (Pie Chart)
+
+---
+
+## 🤖 ML Evaluation Metrics
+
+* **R² Score** → Model accuracy
+* **RMSE** → Prediction error
+
+---
+
+## 📐 Feature Engineering
+
+* Height converted to **cm**
+* Weight converted to **kg**
+* Wage & Value converted to numeric (€ → EUR)
+
+---
+
+## 🎯 Player Rating Predictor
+
+Users can input:
+
+* Age
+* Height
+* Weight
+* Acceleration
+* Sprint Speed
+* Stamina
+* Strength
+
+👉 Model predicts the **Overall FIFA Rating**
+
+---
