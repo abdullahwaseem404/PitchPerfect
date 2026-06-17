@@ -4,7 +4,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
-st.set_page_config(page_title="FIFA Dashboard", layout="wide")
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+
+from xgboost import XGBRegressor
+
+st.set_page_config(page_title="PitchPerfect FIFA Dashboard", layout="wide")
 
 @st.cache_data
 def load_data():
@@ -16,7 +22,6 @@ def load_data():
     return df
 
 fifa = load_data()
-
 
 def height_to_cm(h):
     try:
@@ -31,10 +36,6 @@ def weight_to_kg(w):
     except:
         return np.nan
 
-fifa["Height_cm"] = fifa["Height"].astype(str).apply(height_to_cm)
-fifa["Weight_kg"] = fifa["Weight"].astype(str).apply(weight_to_kg)
-
-
 def money_to_number(v):
     if pd.isna(v):
         return np.nan
@@ -45,20 +46,19 @@ def money_to_number(v):
         return float(v.replace("K", "")) * 1_000
     return np.nan
 
+fifa["Height_cm"] = fifa["Height"].astype(str).apply(height_to_cm)
+fifa["Weight_kg"] = fifa["Weight"].astype(str).apply(weight_to_kg)
 fifa["Wage_EUR"] = fifa["Wage"].apply(money_to_number)
 fifa["Value_EUR"] = fifa["Value"].apply(money_to_number)
-
 
 st.sidebar.header("Filters")
 
 nationalities = st.sidebar.multiselect(
-    "Select Nationality",
-    sorted(fifa["Nationality"].dropna().unique())
+    "Nationality", sorted(fifa["Nationality"].dropna().unique())
 )
 
 clubs = st.sidebar.multiselect(
-    "Select Club",
-    sorted(fifa["Club"].dropna().unique())
+    "Club", sorted(fifa["Club"].dropna().unique())
 )
 
 filtered = fifa.copy()
@@ -69,11 +69,10 @@ if nationalities:
 if clubs:
     filtered = filtered[filtered["Club"].isin(clubs)]
 
+st.title("⚽ PitchPerfect – FIFA Player Data Dashboard")
+st.subheader("Interactive Analytics + Machine Learning Insights")
 
-st.title("⚽ FIFA Player Data Visualization Dashboard")
-st.subheader("📄 Dataset Preview")
 st.dataframe(filtered.head())
-
 
 col1, col2, col3 = st.columns(3)
 
@@ -81,86 +80,95 @@ with col1:
     st.markdown("### 🌍 Top Nationalities")
     counts = filtered["Nationality"].value_counts().head(5)
     fig, ax = plt.subplots()
-    ax.pie(counts, labels=counts.index, autopct="%1.1f%%", startangle=140)
-    ax.axis("equal")
+    ax.pie(counts, labels=counts.index, autopct="%1.1f%%")
     st.pyplot(fig)
 
 with col2:
     st.markdown("### 🎂 Age Distribution")
     fig, ax = plt.subplots()
-    ax.hist(filtered["Age"], bins=20, edgecolor="black")
-    ax.set_xlabel("Age")
-    ax.set_ylabel("Players")
+    ax.hist(filtered["Age"], bins=20)
     st.pyplot(fig)
 
 with col3:
     st.markdown("### 🦶 Preferred Foot")
     fig, ax = plt.subplots()
-    filtered["Preferred Foot"].value_counts().plot(
-        kind="pie", autopct="%1.1f%%", ax=ax
+    filtered["Preferred Foot"].value_counts().plot(kind="pie", autopct="%1.1f%%", ax=ax)
+    st.pyplot(fig)
+
+st.header("🤖 Machine Learning Analysis")
+
+features = [
+    "Age", "Height_cm", "Weight_kg",
+    "Acceleration", "SprintSpeed", "Stamina", "Strength"
+]
+
+target = "Overall"
+
+ml_df = filtered[features + [target]].dropna()
+
+if len(ml_df) > 50:
+
+    X = ml_df[features]
+    y = ml_df[target]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
-    ax.set_ylabel("")
-    st.pyplot(fig)
 
-col4, col5, col6 = st.columns(3)
+    rf = RandomForestRegressor(n_estimators=100, random_state=42)
+    rf.fit(X_train, y_train)
+    rf_pred = rf.predict(X_test)
 
-with col4:
-    st.markdown("### 🏆 Top Clubs by Rating")
-    club_rating = (
-        filtered.groupby("Club")["Overall"]
-        .mean()
-        .sort_values(ascending=False)
-        .head(10)
-    )
+    rf_r2 = r2_score(y_test, rf_pred)
+    rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))
+
+
+    xgb = XGBRegressor(n_estimators=100, learning_rate=0.1)
+    xgb.fit(X_train, y_train)
+    xgb_pred = xgb.predict(X_test)
+
+    xgb_r2 = r2_score(y_test, xgb_pred)
+    xgb_rmse = np.sqrt(mean_squared_error(y_test, xgb_pred))
+
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("🌲 Random Forest")
+        st.write(f"R² Score: {rf_r2:.3f}")
+        st.write(f"RMSE: {rf_rmse:.2f}")
+
+    with col2:
+        st.subheader("⚡ XGBoost")
+        st.write(f"R² Score: {xgb_r2:.3f}")
+        st.write(f"RMSE: {xgb_rmse:.2f}")
+
+
+    st.subheader("📊 Feature Importance (Random Forest)")
+
+    importances = pd.Series(rf.feature_importances_, index=features)
     fig, ax = plt.subplots()
-    club_rating.plot(kind="bar", ax=ax)
-    ax.set_ylabel("Avg Overall")
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+    importances.sort_values().plot(kind="barh", ax=ax)
     st.pyplot(fig)
 
-with col5:
-    st.markdown("### 📈 Overall vs Potential")
-    fig, ax = plt.subplots()
-    ax.scatter(filtered["Overall"], filtered["Potential"], alpha=0.5)
-    ax.set_xlabel("Overall")
-    ax.set_ylabel("Potential")
-    ax.set_xticks(range(40, 100, 5))
-    ax.set_yticks(range(40, 100, 5))
-    st.pyplot(fig)
+else:
+    st.warning("Not enough data for ML after filtering.")
 
-with col6:
-    st.markdown("### 📍 Positions")
-    fig, ax = plt.subplots()
-    filtered["Position"].value_counts().head(10).plot(kind="bar", ax=ax)
-    ax.set_ylabel("Players")
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    st.pyplot(fig)
 
-col7, col8, col9 = st.columns(3)
+st.header("🎯 Player Rating Predictor")
 
-with col7:
-    st.markdown("### 💰 Wage vs Overall")
-    clean_wage = filtered.dropna(subset=["Wage_EUR"])
-    fig, ax = plt.subplots()
-    ax.scatter(clean_wage["Overall"], clean_wage["Wage_EUR"] / 1000, alpha=0.4)
-    ax.set_xlabel("Overall Rating")
-    ax.set_ylabel("Wage (Thousand €)")
-    ax.set_xticks(range(40, 100, 5))
-    st.pyplot(fig)
+age = st.slider("Age", 16, 45, 25)
+height = st.slider("Height (cm)", 150, 210, 175)
+weight = st.slider("Weight (kg)", 50, 110, 70)
+acc = st.slider("Acceleration", 20, 100, 60)
+speed = st.slider("Sprint Speed", 20, 100, 60)
+stamina = st.slider("Stamina", 20, 100, 60)
+strength = st.slider("Strength", 20, 100, 60)
 
-with col8:
-    st.markdown("### 📏 Height vs Weight")
-    clean_hw = filtered.dropna(subset=["Height_cm", "Weight_kg"])
-    fig, ax = plt.subplots()
-    ax.scatter(clean_hw["Height_cm"], clean_hw["Weight_kg"], alpha=0.4)
-    ax.set_xlabel("Height (cm)")
-    ax.set_ylabel("Weight (kg)")
-    st.pyplot(fig)
+if st.button("Predict Overall Rating"):
 
-with col9:
-    st.markdown("### 🔥 Attribute Correlation")
-    attrs = ["Overall", "Potential", "Acceleration", "SprintSpeed", "Strength", "Stamina"]
-    corr = filtered[attrs].corr()
-    fig, ax = plt.subplots()
-    sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
-    st.pyplot(fig)
+    input_data = np.array([[age, height, weight, acc, speed, stamina, strength]])
+
+    prediction = rf.predict(input_data)[0]
+
+    st.success(f"Predicted Overall Rating: {prediction:.2f}")
