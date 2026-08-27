@@ -122,14 +122,12 @@ if len(ml_df) > 50:
     rf_r2 = r2_score(y_test, rf_pred)
     rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))
 
-
     xgb = XGBRegressor(n_estimators=100, learning_rate=0.1)
     xgb.fit(X_train, y_train)
     xgb_pred = xgb.predict(X_test)
 
     xgb_r2 = r2_score(y_test, xgb_pred)
     xgb_rmse = np.sqrt(mean_squared_error(y_test, xgb_pred))
-
 
     col1, col2 = st.columns(2)
 
@@ -143,7 +141,6 @@ if len(ml_df) > 50:
         st.write(f"R² Score: {xgb_r2:.3f}")
         st.write(f"RMSE: {xgb_rmse:.2f}")
 
-
     st.subheader("📊 Feature Importance (Random Forest)")
 
     importances = pd.Series(rf.feature_importances_, index=features)
@@ -153,7 +150,6 @@ if len(ml_df) > 50:
 
 else:
     st.warning("Not enough data for ML after filtering.")
-
 
 st.header("🎯 Player Rating Predictor")
 
